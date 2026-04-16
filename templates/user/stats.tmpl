@@ -40,8 +40,8 @@ td.none {
 			{{if .EmailEnabled}}<th>Email Subscribers</th>{{end}}
 		</tr>
 		<tr>
-			{{if .Federation}}<td><a href="/me/c/{{.Collection.Alias}}/subscribers?filter=fediverse">{{.APFollowers}}</a></td>{{end}}
-			{{if .EmailEnabled}}<td><a href="/me/c/{{.Collection.Alias}}/subscribers">{{.EmailSubscribers}}</a></td>{{end}}
+			{{if .Federation}}<td><a href="{{bp (printf "/me/c/%s/subscribers?filter=fediverse" .Collection.Alias)}}">{{.APFollowers}}</a></td>{{end}}
+			{{if .EmailEnabled}}<td><a href="{{bp (printf "/me/c/%s/subscribers" .Collection.Alias)}}">{{.EmailSubscribers}}</a></td>{{end}}
 		</tr>
 	</table>
 	{{end}}

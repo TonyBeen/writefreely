@@ -130,7 +130,7 @@ func handleCreateUserInvite(app *App, u *User, w http.ResponseWriter, r *http.Re
 		return err
 	}
 
-	return impart.HTTPError{http.StatusFound, "/me/invites"}
+	return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/me/invites"}
 }
 
 func handleViewInvite(app *App, w http.ResponseWriter, r *http.Request) error {
@@ -154,7 +154,7 @@ func handleViewInvite(app *App, w http.ResponseWriter, r *http.Request) error {
 		if ownInvite, _ := app.db.IsUsersInvite(inviteCode, u.ID); !ownInvite {
 			addSessionFlash(app, w, r, "You're already registered and logged in.", nil)
 			// show homepage
-			return impart.HTTPError{http.StatusFound, "/me/settings"}
+			return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/me/settings"}
 		}
 
 		// show invite instructions

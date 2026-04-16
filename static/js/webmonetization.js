@@ -71,7 +71,7 @@ function initMonetization() {
         let params = "receipt="+encodeURIComponent(receipt)
 
         let http = new XMLHttpRequest();
-        http.open("POST", "/api/collections/" + window.collAlias + "/posts/" + window.postSlug + "/splitcontent", true);
+        http.open("POST", basePath + "/api/collections/" + window.collAlias + "/posts/" + window.postSlug + "/splitcontent", true);
 
         // Send the proper header information along with the request
         http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");

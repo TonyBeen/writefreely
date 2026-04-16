@@ -31,7 +31,7 @@ select {
 
 	{{if .ConfigMessage}}<p class="success" style="text-align: center">{{.ConfigMessage}}</p>{{end}}
 
-	<form action="/admin/update/config" method="post">
+	<form action="{{bp "/admin/update/config"}}" method="post">
 		<div class="features row">
 			<div{{if .Config.SingleUser}} class="invisible"{{end}}>
 				Site Title
@@ -167,7 +167,7 @@ select {
 </div>
 
 <script>
-history.replaceState(null, "", "/admin/settings"+window.location.hash);
+history.replaceState(null, "", basePath + "/admin/settings"+window.location.hash);
 </script>
 
 {{template "footer" .}}

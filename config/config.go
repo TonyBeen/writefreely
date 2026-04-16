@@ -124,6 +124,7 @@ type (
 		SiteName string `ini:"site_name"`
 		SiteDesc string `ini:"site_description"`
 		Host     string `ini:"host"`
+		BasePath string `ini:"-"`
 
 		// Site appearance
 		Theme      string `ini:"theme"`
@@ -296,6 +297,8 @@ func Load(fname string) (*Config, error) {
 	if u.Port() != "" {
 		uc.App.Host += ":" + u.Port()
 	}
+	uc.App.Host += u.Path
+	uc.App.BasePath = strings.TrimRight(u.Path, "/")
 
 	return uc, nil
 }

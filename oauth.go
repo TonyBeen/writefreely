@@ -339,7 +339,7 @@ func (h oauthHandler) viewOauthCallback(app *App, w http.ResponseWriter, r *http
 		// TODO: show NO message for cases like user pressing "Cancel" on authorize step
 		addSessionFlash(app, w, r, err.Error(), nil)
 		if attachUserID > 0 {
-			return impart.HTTPError{http.StatusFound, "/me/settings"}
+			return impart.HTTPError{http.StatusFound, h.Config.App.BasePath + "/me/settings"}
 		}
 		return impart.HTTPError{http.StatusInternalServerError, err.Error()}
 	}
@@ -362,7 +362,7 @@ func (h oauthHandler) viewOauthCallback(app *App, w http.ResponseWriter, r *http
 		if err = addSessionFlash(app, w, r, "This OAuth account is already attached to another user.", nil); err != nil {
 			return impart.HTTPError{Status: http.StatusInternalServerError, Message: err.Error()}
 		}
-		return impart.HTTPError{http.StatusFound, "/me/settings"}
+		return impart.HTTPError{http.StatusFound, h.Config.App.BasePath + "/me/settings"}
 	}
 
 	if localUserID != -1 {
@@ -372,7 +372,7 @@ func (h oauthHandler) viewOauthCallback(app *App, w http.ResponseWriter, r *http
 			log.Error("Unable to GetUserByID %d: %s", localUserID, err)
 			return impart.HTTPError{http.StatusInternalServerError, err.Error()}
 		}
-		if err = loginOrFail(h.Store, w, r, user); err != nil {
+		if err = loginOrFail(h.Store, w, r, user, h.Config.App.BasePath); err != nil {
 			log.Error("Unable to loginOrFail %d: %s", localUserID, err)
 			return impart.HTTPError{http.StatusInternalServerError, err.Error()}
 		}
@@ -385,7 +385,7 @@ func (h oauthHandler) viewOauthCallback(app *App, w http.ResponseWriter, r *http
 		if err != nil {
 			return impart.HTTPError{http.StatusInternalServerError, err.Error()}
 		}
-		return impart.HTTPError{http.StatusFound, "/me/settings"}
+		return impart.HTTPError{http.StatusFound, h.Config.App.BasePath + "/me/settings"}
 	}
 
 	// New user registration below.
@@ -401,7 +401,7 @@ func (h oauthHandler) viewOauthCallback(app *App, w http.ResponseWriter, r *http
 		}
 	} else if !app.cfg.App.OpenRegistration {
 		addSessionFlash(app, w, r, ErrUserNotFound.Error(), nil)
-		return impart.HTTPError{http.StatusFound, "/login"}
+		return impart.HTTPError{http.StatusFound, h.Config.App.BasePath + "/login"}
 	}
 
 	displayName := tokenInfo.DisplayName
@@ -459,7 +459,7 @@ func limitedJsonUnmarshal(body io.ReadCloser, n int, thing interface{}) error {
 	return json.Unmarshal(data, thing)
 }
 
-func loginOrFail(store sessions.Store, w http.ResponseWriter, r *http.Request, user *User) error {
+func loginOrFail(store sessions.Store, w http.ResponseWriter, r *http.Request, user *User, basePath string) error {
 	// An error may be returned, but a valid session should always be returned.
 	session, _ := store.Get(r, cookieName)
 	session.Values[cookieUserVal] = user.Cookie()
@@ -467,6 +467,6 @@ func loginOrFail(store sessions.Store, w http.ResponseWriter, r *http.Request, u
 		fmt.Println("error saving session", err)
 		return err
 	}
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, basePath+"/", http.StatusTemporaryRedirect)
 	return nil
 }

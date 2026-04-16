@@ -235,7 +235,7 @@ func handleViewAdminUser(app *App, u *User, w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	username := vars["username"]
 	if username == "" {
-		return impart.HTTPError{http.StatusFound, "/admin/users"}
+		return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/admin/users"}
 	}
 
 	p := struct {
@@ -346,14 +346,14 @@ func handleAdminDeleteUser(app *App, u *User, w http.ResponseWriter, r *http.Req
 	}
 
 	_ = addSessionFlash(app, w, r, fmt.Sprintf("User \"%s\" was deleted successfully.", username), nil)
-	return impart.HTTPError{http.StatusFound, "/admin/users"}
+	return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/admin/users"}
 }
 
 func handleAdminToggleUserStatus(app *App, u *User, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	username := vars["username"]
 	if username == "" {
-		return impart.HTTPError{http.StatusFound, "/admin/users"}
+		return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/admin/users"}
 	}
 
 	user, err := app.db.GetUserForAuth(username)
@@ -373,14 +373,14 @@ func handleAdminToggleUserStatus(app *App, u *User, w http.ResponseWriter, r *ht
 		log.Error("toggle user silenced: %v", err)
 		return impart.HTTPError{http.StatusInternalServerError, fmt.Sprintf("Could not toggle user status: %v", err)}
 	}
-	return impart.HTTPError{http.StatusFound, fmt.Sprintf("/admin/user/%s#status", username)}
+	return impart.HTTPError{http.StatusFound, fmt.Sprintf("%s/admin/user/%s#status", app.cfg.App.BasePath, username)}
 }
 
 func handleAdminResetUserPass(app *App, u *User, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	username := vars["username"]
 	if username == "" {
-		return impart.HTTPError{http.StatusFound, "/admin/users"}
+		return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/admin/users"}
 	}
 
 	// Generate new random password since none supplied
@@ -405,7 +405,7 @@ func handleAdminResetUserPass(app *App, u *User, w http.ResponseWriter, r *http.
 
 	addSessionFlash(app, w, r, fmt.Sprintf("SUCCESS: %s", pass), nil)
 
-	return impart.HTTPError{http.StatusFound, fmt.Sprintf("/admin/user/%s", username)}
+	return impart.HTTPError{http.StatusFound, fmt.Sprintf("%s/admin/user/%s", app.cfg.App.BasePath, username)}
 }
 
 func handleViewAdminPages(app *App, u *User, w http.ResponseWriter, r *http.Request) error {
@@ -484,7 +484,7 @@ func handleViewAdminPage(app *App, u *User, w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	slug := vars["slug"]
 	if slug == "" {
-		return impart.HTTPError{http.StatusFound, "/admin/pages"}
+		return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/admin/pages"}
 	}
 
 	p := struct {
@@ -552,7 +552,7 @@ func handleAdminUpdateSite(app *App, u *User, w http.ResponseWriter, r *http.Req
 		err = app.db.UpdateDynamicContent("landing-banner", "", r.FormValue("banner"), "section")
 		if err != nil {
 			m = "?m=" + err.Error()
-			return impart.HTTPError{http.StatusFound, "/admin/page/" + id + m}
+			return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/admin/page/" + id + m}
 		}
 		err = app.db.UpdateDynamicContent("landing-body", "", r.FormValue("content"), "section")
 	} else if id == "reader" {
@@ -565,7 +565,7 @@ func handleAdminUpdateSite(app *App, u *User, w http.ResponseWriter, r *http.Req
 	if err != nil {
 		m = "?m=" + err.Error()
 	}
-	return impart.HTTPError{http.StatusFound, "/admin/page/" + id + m}
+	return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/admin/page/" + id + m}
 }
 
 func handleAdminUpdateConfig(apper Apper, u *User, w http.ResponseWriter, r *http.Request) error {
@@ -602,7 +602,7 @@ func handleAdminUpdateConfig(apper Apper, u *User, w http.ResponseWriter, r *htt
 	if err != nil {
 		m = "?cm=" + err.Error()
 	}
-	return impart.HTTPError{http.StatusFound, "/admin/settings" + m + "#config"}
+	return impart.HTTPError{http.StatusFound, apper.App().cfg.App.BasePath + "/admin/settings" + m + "#config"}
 }
 
 func updateAppStats() {

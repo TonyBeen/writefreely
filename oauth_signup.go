@@ -146,7 +146,7 @@ func (h oauthHandler) viewOauthSignup(app *App, w http.ResponseWriter, r *http.R
 		return h.showOauthSignupPage(app, w, r, tp, err)
 	}
 
-	if err := loginOrFail(h.Store, w, r, newUser); err != nil {
+	if err := loginOrFail(h.Store, w, r, newUser, h.Config.App.BasePath); err != nil {
 		return h.showOauthSignupPage(app, w, r, tp, err)
 	}
 	return nil

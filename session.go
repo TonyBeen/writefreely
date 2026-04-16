@@ -41,7 +41,7 @@ func (app *App) InitSession() {
 	// Create the cookie store
 	store := sessions.NewCookieStore(app.keys.CookieAuthKey, app.keys.CookieKey)
 	store.Options = &sessions.Options{
-		Path:     "/",
+		Path:     app.cfg.App.BasePath + "/",
 		MaxAge:   sessionLength,
 		HttpOnly: true,
 		Secure:   strings.HasPrefix(app.cfg.App.Host, "https://"),
@@ -92,16 +92,16 @@ func addSessionFlash(app *App, w http.ResponseWriter, r *http.Request, m string,
 
 func getUserAndSession(app *App, r *http.Request) (*User, *sessions.Session) {
 	session, err := app.sessionStore.Get(r, cookieName)
-	if err == nil {
-		// Got the currently logged-in user
-		val := session.Values[cookieUserVal]
-		var u = &User{}
-		var ok bool
-		if u, ok = val.(*User); ok {
-			return u, session
-		}
+	if err != nil {
+		return nil, nil
 	}
-
+	// Got the currently logged-in user
+	val := session.Values[cookieUserVal]
+	var u = &User{}
+	var ok bool
+	if u, ok = val.(*User); ok {
+		return u, session
+	}
 	return nil, nil
 }
 

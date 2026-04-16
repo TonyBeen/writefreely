@@ -71,7 +71,7 @@ form dd {
 <div class="row">
 	<div class="banner-container">
 		{{.Banner}}
-		<p><a href="{{if .Content}}#more{{else}}/about{{end}}">Learn more...</a></p>
+		<p><a href="{{if .Content}}#more{{else}}{{bp "/about"}}{{end}}">Learn more...</a></p>
 	</div>
 
 	<div{{if not .OpenRegistration}} style="padding: 2em 0;"{{end}}>
@@ -83,7 +83,7 @@ form dd {
 		</ul>{{end}}
 
 		<div id="billing">
-			<form action="/auth/signup" method="POST" id="signup-form" onsubmit="return signup()">
+			<form action="{{bp "/auth/signup"}}" method="POST" id="signup-form" onsubmit="return signup()">
 				<dl class="billing">
 					<label>
 						<dt>Username</dt>
@@ -125,7 +125,7 @@ form dd {
 </div>
 {{ end }}
 
-<script type="text/javascript" src="/js/h.js"></script>
+<script type="text/javascript" src="{{bp "/js/h.js"}}"></script>
 <script type="text/javascript">
 function signup() {
 	var $pass = document.getElementById('password');
@@ -166,7 +166,7 @@ var doneTyping = function() {
 			username: alias
 		};
 		var http = new XMLHttpRequest();
-		http.open("POST", '/api/alias', true);
+		http.open("POST", basePath + '/api/alias', true);
 
 		// Send the proper header information along with the request
 		http.setRequestHeader("Content-type", "application/json");

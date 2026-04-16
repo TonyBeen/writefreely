@@ -266,7 +266,7 @@ func viewLogout(app *App, w http.ResponseWriter, r *http.Request) error {
 			return impart.HTTPError{http.StatusInternalServerError, "Unable to save cookie session."}
 		}
 
-		return impart.HTTPError{http.StatusFound, "/"}
+		return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/"}
 	}
 
 	u, err = app.db.GetUserByID(u.ID)
@@ -282,7 +282,7 @@ func viewLogout(app *App, w http.ResponseWriter, r *http.Request) error {
 		return impart.HTTPError{http.StatusInternalServerError, "Unable to save cookie session."}
 	}
 
-	return impart.HTTPError{http.StatusFound, "/"}
+	return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/"}
 }
 
 func handleAPILogout(app *App, w http.ResponseWriter, r *http.Request) error {
@@ -376,7 +376,7 @@ func webLogin(app *App, w http.ResponseWriter, r *http.Request) error {
 		saveTempInfo(app, "login-user", username, r, w)
 
 		// Retain post-login URL if one was given
-		redirectTo := "/login"
+		redirectTo := app.cfg.App.BasePath + "/login"
 		postLoginRedirect := r.FormValue("to")
 		if postLoginRedirect != "" {
 			redirectTo += "?to=" + postLoginRedirect
@@ -399,9 +399,9 @@ func login(app *App, w http.ResponseWriter, r *http.Request) error {
 	redirectTo := r.FormValue("to")
 	if redirectTo == "" {
 		if app.cfg.App.SingleUser {
-			redirectTo = "/me/new"
+			redirectTo = app.cfg.App.BasePath + "/me/new"
 		} else {
-			redirectTo = "/"
+			redirectTo = app.cfg.App.BasePath + "/"
 		}
 	}
 
@@ -947,7 +947,7 @@ func updateSettings(app *App, w http.ResponseWriter, r *http.Request) error {
 
 	// Do update
 	postUpdateReturn := r.FormValue("return")
-	redirectTo := "/me/settings"
+	redirectTo := app.cfg.App.BasePath + "/me/settings"
 	if s.IsLogOut {
 		redirectTo += "?logout=1"
 	} else if postUpdateReturn != "" {
@@ -975,7 +975,7 @@ func updateSettings(app *App, w http.ResponseWriter, r *http.Request) error {
 		}
 
 		if s.IsLogOut {
-			redirectTo = "/me/logout"
+			redirectTo = app.cfg.App.BasePath + "/me/logout"
 		} else {
 			sess.Values[cookieUserVal] = u.Cookie()
 			addSessionFlash(app, w, r, "Account updated.", nil)
@@ -1273,7 +1273,7 @@ func viewResetPassword(app *App, w http.ResponseWriter, r *http.Request) error {
 			log.Error("Couldn't consume token %s for user %d!!! %s", token, userID, err)
 		}
 		addSessionFlash(app, w, r, "Your password was reset. Now you can log in below.", nil)
-		return impart.HTTPError{http.StatusFound, "/login"}
+		return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/login"}
 	}
 
 	f, _ := getSessionFlashes(app, w, r, nil)
@@ -1320,7 +1320,7 @@ func doAutomatedPasswordChange(app *App, userID int64, newPass string) error {
 }
 
 func handleResetPasswordInit(app *App, w http.ResponseWriter, r *http.Request) error {
-	returnLoc := impart.HTTPError{http.StatusFound, "/reset"}
+	returnLoc := impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/reset"}
 
 	if !app.cfg.Email.Enabled() {
 		// Email isn't configured, so there's nothing to do; send back to the reset form, where they'll get an explanation
@@ -1350,7 +1350,7 @@ func handleResetPasswordInit(app *App, w http.ResponseWriter, r *http.Request) e
 		return returnLoc
 	}
 	if isSet, _ := app.db.IsUserPassSet(u.ID); !isSet {
-		err = loginViaEmail(app, u.Username, "/me/settings")
+		err = loginViaEmail(app, u.Username, app.cfg.App.BasePath+"/me/settings")
 		if err != nil {
 			return err
 		}
@@ -1385,7 +1385,7 @@ func emailPasswordReset(app *App, toEmail, token string) error {
 	}
 	footerPara := "Didn't request this password reset? Your account is still safe, and you can safely ignore this email."
 
-	plainMsg := fmt.Sprintf("We received a request to reset your password on %s. Please click the following link to continue (or copy and paste it into your browser): %s/reset?t=%s\n\n%s", app.cfg.App.SiteName, app.cfg.App.Host, token, footerPara)
+	plainMsg := fmt.Sprintf("We received a request to reset your password on %s. Please click the following link to continue (or copy and paste it into your browser): %s%s/reset?t=%s\n\n%s", app.cfg.App.SiteName, app.cfg.App.Host, app.cfg.App.BasePath, token, footerPara)
 	m, err := mlr.NewMessage(app.cfg.App.SiteName+" <noreply-password@"+app.cfg.Email.Domain+">", "Reset Your "+app.cfg.App.SiteName+" Password", plainMsg, fmt.Sprintf("<%s>", toEmail))
 	if err != nil {
 		return err
@@ -1396,11 +1396,11 @@ func emailPasswordReset(app *App, toEmail, token string) error {
 		<div style="margin:0 auto; max-width: 40em; font-size: 1.2em;">
         <h1 style="font-size:1.75em"><a style="text-decoration:none;color:#000;" href="%s">%s</a></h1>
 		<p>We received a request to reset your password on %s. Please click the following link to continue:</p>
-		<p style="font-size:1.2em;margin-bottom:1.5em;"><a href="%s/reset?t=%s">Reset your password</a></p>
+		<p style="font-size:1.2em;margin-bottom:1.5em;"><a href="%s%s/reset?t=%s">Reset your password</a></p>
         <p style="font-size: 0.86em;margin:1em auto">%s</p>
         </div>
 	</body>
-</html>`, app.cfg.App.Host, app.cfg.App.SiteName, app.cfg.App.SiteName, app.cfg.App.Host, token, footerPara))
+</html>`, app.cfg.App.Host, app.cfg.App.SiteName, app.cfg.App.SiteName, app.cfg.App.Host, app.cfg.App.BasePath, token, footerPara))
 	return mlr.Send(m)
 }
 
@@ -1437,7 +1437,7 @@ func loginViaEmail(app *App, alias, redirectTo string) error {
 	toEmail := u.EmailClear(app.keys)
 	footerPara := "This link will only work once and expires in 15 minutes. Didn't ask us to log in? You can safely ignore this email."
 
-	plainMsg := fmt.Sprintf("Log in to %s here: %s/login?to=%s&with=%s\n\n%s", app.cfg.App.SiteName, app.cfg.App.Host, redirectTo, t, footerPara)
+	plainMsg := fmt.Sprintf("Log in to %s here: %s%s/login?to=%s&with=%s\n\n%s", app.cfg.App.SiteName, app.cfg.App.Host, app.cfg.App.BasePath, redirectTo, t, footerPara)
 	m, err := mlr.NewMessage(app.cfg.App.SiteName+" <noreply-login@"+app.cfg.Email.Domain+">", "Log in to "+app.cfg.App.SiteName, plainMsg, fmt.Sprintf("<%s>", toEmail))
 	if err != nil {
 		return err
@@ -1448,11 +1448,11 @@ func loginViaEmail(app *App, alias, redirectTo string) error {
 	<body style="font-family:Lora, 'Palatino Linotype', Palatino, Baskerville, 'Book Antiqua', 'New York', 'DejaVu serif', serif; font-size: 100%%; margin:1em 2em;">
 		<div style="margin:0 auto; max-width: 40em; font-size: 1.2em;">
         <h1 style="font-size:1.75em"><a style="text-decoration:none;color:#000;" href="%s">%s</a></h1>
-		<p style="font-size:1.2em;margin-bottom:1.5em;text-align:center"><a href="%s/login?to=%s&with=%s">Log in to %s here</a>.</p>
+		<p style="font-size:1.2em;margin-bottom:1.5em;text-align:center"><a href="%s%s/login?to=%s&with=%s">Log in to %s here</a>.</p>
         <p style="font-size: 0.86em;color:#666;text-align:center;max-width:35em;margin:1em auto">%s</p>
         </div>
 	</body>
-</html>`, app.cfg.App.Host, app.cfg.App.SiteName, app.cfg.App.Host, redirectTo, t, app.cfg.App.SiteName, footerPara))
+</html>`, app.cfg.App.Host, app.cfg.App.SiteName, app.cfg.App.Host, app.cfg.App.BasePath, redirectTo, t, app.cfg.App.SiteName, footerPara))
 	return mlr.Send(m)
 }
 
@@ -1517,7 +1517,7 @@ func handleUserDelete(app *App, u *User, w http.ResponseWriter, r *http.Request)
 
 	// FIXME: This doesn't ever appear to the user, as (I believe) the value is erased when the session cookie is reset
 	_ = addSessionFlash(app, w, r, "Thanks for writing with us! You account was deleted successfully.", nil)
-	return impart.HTTPError{http.StatusFound, "/me/logout"}
+	return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/me/logout"}
 }
 
 func removeOauth(app *App, u *User, w http.ResponseWriter, r *http.Request) error {
@@ -1530,7 +1530,7 @@ func removeOauth(app *App, u *User, w http.ResponseWriter, r *http.Request) erro
 		return impart.HTTPError{Status: http.StatusInternalServerError, Message: err.Error()}
 	}
 
-	return impart.HTTPError{Status: http.StatusFound, Message: "/me/settings"}
+	return impart.HTTPError{Status: http.StatusFound, Message: app.cfg.App.BasePath + "/me/settings"}
 }
 
 func prepareUserEmail(input string, emailKey []byte) zero.String {

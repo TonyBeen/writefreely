@@ -190,5 +190,5 @@ func handleImport(app *App, u *User, w http.ResponseWriter, r *http.Request) err
 	} else if filesImported > 0 {
 		_ = addSessionFlash(app, w, r, fmt.Sprintf("INFO: %d of %d posts imported, see details below.", filesImported, filesSubmitted), nil)
 	}
-	return impart.HTTPError{http.StatusFound, "/me/import"}
+	return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/me/import"}
 }

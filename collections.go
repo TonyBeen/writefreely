@@ -507,7 +507,7 @@ func newCollection(app *App, w http.ResponseWriter, r *http.Request) error {
 	if reqJSON {
 		return impart.WriteSuccess(w, res, http.StatusCreated)
 	}
-	redirectTo := "/me/c/"
+	redirectTo := app.cfg.App.BasePath + "/me/c/"
 	// TODO: redirect to pad when necessary
 	return impart.HTTPError{http.StatusFound, redirectTo}
 }
@@ -705,12 +705,12 @@ func (c *CollectionObj) CanShowScript() bool {
 	return false
 }
 
-func processCollectionRequest(cr *collectionReq, vars map[string]string, w http.ResponseWriter, r *http.Request) error {
+func processCollectionRequest(app *App, cr *collectionReq, vars map[string]string, w http.ResponseWriter, r *http.Request) error {
 	cr.prefix = vars["prefix"]
 	cr.alias = vars["collection"]
 	// Normalize the URL, redirecting user to consistent post URL
 	if cr.alias != strings.ToLower(cr.alias) {
-		return impart.HTTPError{http.StatusMovedPermanently, fmt.Sprintf("/%s/", strings.ToLower(cr.alias))}
+		return impart.HTTPError{http.StatusMovedPermanently, fmt.Sprintf("%s/%s/", app.cfg.App.BasePath, strings.ToLower(cr.alias))}
 	}
 
 	return nil
@@ -747,13 +747,13 @@ func processCollectionPermissions(app *App, cr *collectionReq, u *User, w http.R
 					// Alias is within post ID range, so just be sure this isn't a post
 					if app.db.PostIDExists(cr.alias) {
 						// TODO: use StatusFound for vanity post URLs when we implement them
-						return nil, impart.HTTPError{http.StatusMovedPermanently, "/" + cr.alias}
+						return nil, impart.HTTPError{http.StatusMovedPermanently, app.cfg.App.BasePath + "/" + cr.alias}
 					}
 				}
 				// Redirect if necessary
 				newAlias := app.db.GetCollectionRedirect(cr.alias)
 				if newAlias != "" {
-					return nil, impart.HTTPError{http.StatusFound, "/" + newAlias + "/"}
+					return nil, impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/" + newAlias + "/"}
 				}
 			}
 		}
@@ -858,7 +858,7 @@ func handleViewCollection(app *App, w http.ResponseWriter, r *http.Request) erro
 	vars := mux.Vars(r)
 	cr := &collectionReq{}
 
-	err := processCollectionRequest(cr, vars, w, r)
+	err := processCollectionRequest(app, cr, vars, w, r)
 	if err != nil {
 		return err
 	}
@@ -909,9 +909,9 @@ func handleViewCollection(app *App, w http.ResponseWriter, r *http.Request) erro
 
 	coll.TotalPages = int(math.Ceil(float64(coll.TotalPosts) / float64(ppp)))
 	if coll.TotalPages > 0 && page > coll.TotalPages {
-		redirURL := fmt.Sprintf("/page/%d", coll.TotalPages)
+		redirURL := fmt.Sprintf("%s/page/%d", app.cfg.App.BasePath, coll.TotalPages)
 		if !app.cfg.App.SingleUser {
-			redirURL = fmt.Sprintf("/%s%s%s", cr.prefix, coll.Alias, redirURL)
+			redirURL = fmt.Sprintf("%s/%s%s%s", app.cfg.App.BasePath, cr.prefix, coll.Alias, redirURL)
 		}
 		return impart.HTTPError{http.StatusFound, redirURL}
 	}
@@ -1026,7 +1026,7 @@ func handleViewCollectionTag(app *App, w http.ResponseWriter, r *http.Request) e
 	tag := vars["tag"]
 
 	cr := &collectionReq{}
-	err := processCollectionRequest(cr, vars, w, r)
+	err := processCollectionRequest(app, cr, vars, w, r)
 	if err != nil {
 		return err
 	}
@@ -1054,9 +1054,9 @@ func handleViewCollectionTag(app *App, w http.ResponseWriter, r *http.Request) e
 	pagePosts := coll.Format.PostsPerPage()
 	coll.TotalPages = int(math.Ceil(float64(ttlPosts) / float64(pagePosts)))
 	if coll.TotalPages > 0 && page > coll.TotalPages {
-		redirURL := fmt.Sprintf("/page/%d", coll.TotalPages)
+		redirURL := fmt.Sprintf("%s/page/%d", app.cfg.App.BasePath, coll.TotalPages)
 		if !app.cfg.App.SingleUser {
-			redirURL = fmt.Sprintf("/%s%s%s", cr.prefix, coll.Alias, redirURL)
+			redirURL = fmt.Sprintf("%s/%s%s%s", app.cfg.App.BasePath, cr.prefix, coll.Alias, redirURL)
 		}
 		return impart.HTTPError{http.StatusFound, redirURL}
 	}
@@ -1124,7 +1124,7 @@ func handleViewCollectionLang(app *App, w http.ResponseWriter, r *http.Request) 
 	lang := vars["lang"]
 
 	cr := &collectionReq{}
-	err := processCollectionRequest(cr, vars, w, r)
+	err := processCollectionRequest(app, cr, vars, w, r)
 	if err != nil {
 		return err
 	}
@@ -1152,9 +1152,9 @@ func handleViewCollectionLang(app *App, w http.ResponseWriter, r *http.Request) 
 	pagePosts := coll.Format.PostsPerPage()
 	coll.TotalPages = int(math.Ceil(float64(ttlPosts) / float64(pagePosts)))
 	if coll.TotalPages > 0 && page > coll.TotalPages {
-		redirURL := fmt.Sprintf("/lang:%s/page/%d", lang, coll.TotalPages)
+		redirURL := fmt.Sprintf("%s/lang:%s/page/%d", app.cfg.App.BasePath, lang, coll.TotalPages)
 		if !app.cfg.App.SingleUser {
-			redirURL = fmt.Sprintf("/%s%s%s", cr.prefix, coll.Alias, redirURL)
+			redirURL = fmt.Sprintf("%s/%s%s%s", app.cfg.App.BasePath, cr.prefix, coll.Alias, redirURL)
 		}
 		return impart.HTTPError{http.StatusFound, redirURL}
 	}
@@ -1229,15 +1229,15 @@ func handleCollectionPostRedirect(app *App, w http.ResponseWriter, r *http.Reque
 	slug := vars["slug"]
 
 	cr := &collectionReq{}
-	err := processCollectionRequest(cr, vars, w, r)
+	err := processCollectionRequest(app, cr, vars, w, r)
 	if err != nil {
 		return err
 	}
 
 	// Normalize the URL, redirecting user to consistent post URL
-	loc := fmt.Sprintf("/%s", slug)
+	loc := fmt.Sprintf("%s/%s", app.cfg.App.BasePath, slug)
 	if !app.cfg.App.SingleUser {
-		loc = fmt.Sprintf("/%s/%s", cr.alias, slug)
+		loc = fmt.Sprintf("%s/%s/%s", app.cfg.App.BasePath, cr.alias, slug)
 	}
 	return impart.HTTPError{http.StatusFound, loc}
 }
@@ -1315,7 +1315,7 @@ func existingCollection(app *App, w http.ResponseWriter, r *http.Request) error 
 				return err
 			}
 			addSessionFlash(app, w, r, err.Message, nil)
-			return impart.HTTPError{http.StatusFound, "/me/c/" + collAlias}
+			return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/me/c/" + collAlias}
 		} else {
 			log.Error("Couldn't update collection: %v\n", err)
 			return err
@@ -1328,7 +1328,7 @@ func existingCollection(app *App, w http.ResponseWriter, r *http.Request) error 
 	}
 
 	addSessionFlash(app, w, r, "Blog updated!", nil)
-	return impart.HTTPError{http.StatusFound, "/me/c/" + collAlias}
+	return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/me/c/" + collAlias}
 }
 
 // collectionAliasFromReq takes a request and returns the collection alias
@@ -1405,9 +1405,9 @@ func handleWebCollectionUnlock(app *App, w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	next := "/" + readReq.Next
+	next := app.cfg.App.BasePath + "/" + readReq.Next
 	if !app.cfg.App.SingleUser {
-		next = "/" + readReq.Alias + next
+		next = app.cfg.App.BasePath + "/" + readReq.Alias + next
 	}
 	return impart.HTTPError{http.StatusFound, next}
 }

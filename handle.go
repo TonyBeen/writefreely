@@ -159,7 +159,7 @@ func (h *Handler) User(f userHandlerFunc) http.HandlerFunc {
 				status = impErr.Status
 				if impErr == ErrUserNotFound {
 					log.Info("Logged-in user not found. Logging out.")
-					sendRedirect(w, http.StatusFound, "/me/logout?to="+h.app.App().cfg.App.LandingPath())
+					sendRedirect(w, http.StatusFound, h.app.App().cfg.App.BasePath+"/me/logout?to="+h.app.App().cfg.App.BasePath+h.app.App().cfg.App.LandingPath())
 					// Reset err so handleHTTPError does nothing
 					err = nil
 				}
@@ -426,7 +426,7 @@ func (h *Handler) WebErrors(f handlerFunc, ul UserLevelFunc) http.HandlerFunc {
 
 				_, gotUser := session.Values[cookieUserVal].(*User)
 				if ul(h.app.App().cfg) == UserLevelNoneRequiredType && gotUser {
-					to := correctPageFromLoginAttempt(r)
+					to := correctPageFromLoginAttempt(r, h.app.App().cfg.App.BasePath)
 					log.Info("Handler: Required NO user, but got one. Redirecting to %s", to)
 					err := impart.HTTPError{http.StatusFound, to}
 					status = err.Status
@@ -515,7 +515,7 @@ func (h *Handler) Web(f handlerFunc, ul UserLevelFunc) http.HandlerFunc {
 
 				_, gotUser := session.Values[cookieUserVal].(*User)
 				if ul(h.app.App().cfg) == UserLevelNoneRequiredType && gotUser {
-					to := correctPageFromLoginAttempt(r)
+					to := correctPageFromLoginAttempt(r, h.app.App().cfg.App.BasePath)
 					log.Info("Handler: Required NO user, but got one. Redirecting to %s", to)
 					err := impart.HTTPError{http.StatusFound, to}
 					status = err.Status
@@ -764,7 +764,7 @@ func (h *Handler) Redirect(url string, ul UserLevelFunc) http.HandlerFunc {
 
 				_, gotUser := session.Values[cookieUserVal].(*User)
 				if ul(h.app.App().cfg) == UserLevelNoneRequiredType && gotUser {
-					to := correctPageFromLoginAttempt(r)
+					to := correctPageFromLoginAttempt(r, h.app.App().cfg.App.BasePath)
 					log.Info("Handler: Required NO user, but got one. Redirecting to %s", to)
 					err := impart.HTTPError{http.StatusFound, to}
 					status = err.Status
@@ -800,7 +800,7 @@ func (h *Handler) handleHTTPError(w http.ResponseWriter, r *http.Request, err er
 			if r.URL.RawQuery != "" {
 				q = url.QueryEscape("?" + r.URL.RawQuery)
 			}
-			sendRedirect(w, http.StatusFound, "/login?to="+r.URL.Path+q)
+			sendRedirect(w, http.StatusFound, h.app.App().cfg.App.BasePath+"/login?to="+r.URL.Path+q)
 			return
 		} else if err.Status == http.StatusGone {
 			w.WriteHeader(err.Status)
@@ -919,12 +919,14 @@ func (h *Handler) handleOAuthError(w http.ResponseWriter, r *http.Request, err e
 	return
 }
 
-func correctPageFromLoginAttempt(r *http.Request) string {
+func correctPageFromLoginAttempt(r *http.Request, basePath string) string {
 	to := r.FormValue("to")
 	if to == "" {
-		to = "/"
+		to = basePath + "/"
 	} else if !strings.HasPrefix(to, "/") {
-		to = "/" + to
+		to = basePath + "/" + to
+	} else if basePath != "" && !strings.HasPrefix(to, basePath+"/") && to != basePath {
+		to = basePath + to
 	}
 	return to
 }

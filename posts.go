@@ -337,12 +337,12 @@ func handleViewPost(app *App, w http.ResponseWriter, r *http.Request) error {
 	// Display collection if this is a collection
 	c, _ := app.db.GetCollection(friendlyID)
 	if c != nil {
-		return impart.HTTPError{http.StatusMovedPermanently, fmt.Sprintf("/%s/", friendlyID)}
+		return impart.HTTPError{http.StatusMovedPermanently, fmt.Sprintf("%s/%s/", app.cfg.App.BasePath, friendlyID)}
 	}
 
 	// Normalize the URL, redirecting user to consistent post URL
 	if friendlyID != strings.ToLower(friendlyID) {
-		return impart.HTTPError{http.StatusMovedPermanently, fmt.Sprintf("/%s", strings.ToLower(friendlyID))}
+		return impart.HTTPError{http.StatusMovedPermanently, fmt.Sprintf("%s/%s", app.cfg.App.BasePath, strings.ToLower(friendlyID))}
 	}
 
 	ext := ""
@@ -368,7 +368,7 @@ func handleViewPost(app *App, w http.ResponseWriter, r *http.Request) error {
 
 	fixedID := slug.Make(friendlyID)
 	if fixedID != friendlyID {
-		return impart.HTTPError{http.StatusFound, fmt.Sprintf("/%s%s", fixedID, ext)}
+		return impart.HTTPError{http.StatusFound, fmt.Sprintf("%s/%s%s", app.cfg.App.BasePath, fixedID, ext)}
 	}
 
 	err := app.db.QueryRow("SELECT owner_id, collection_id, title, content, text_appearance, view_count, language, rtl FROM posts WHERE id = ?", friendlyID).Scan(&ownerID, &collectionID, &title, &content, &font, &views, &language, &rtl)
@@ -813,16 +813,16 @@ func existingPost(app *App, w http.ResponseWriter, r *http.Request) error {
 
 	addSessionFlash(app, w, r, "Changes saved.", nil)
 	collectionAlias := vars["alias"]
-	redirect := "/" + postID + "/meta"
+	redirect := app.cfg.App.BasePath + "/" + postID + "/meta"
 	if collectionAlias != "" {
 		collPre := "/" + collectionAlias
 		if app.cfg.App.SingleUser {
 			collPre = ""
 		}
-		redirect = collPre + "/" + pRes.Slug.String + "/edit/meta"
+		redirect = app.cfg.App.BasePath + collPre + "/" + pRes.Slug.String + "/edit/meta"
 	} else {
 		if app.cfg.App.SingleUser {
-			redirect = "/d" + redirect
+			redirect = app.cfg.App.BasePath + "/d/" + postID + "/meta"
 		}
 	}
 	w.Header().Set("Location", redirect)
@@ -1474,7 +1474,7 @@ func viewCollectionPost(app *App, w http.ResponseWriter, r *http.Request) error 
 	isRaw := strings.HasSuffix(slug, ".txt") || isJSON || isXML || isMarkdown
 
 	cr := &collectionReq{}
-	err := processCollectionRequest(cr, vars, w, r)
+	err := processCollectionRequest(app, cr, vars, w, r)
 	if err != nil {
 		return err
 	}
@@ -1487,9 +1487,9 @@ func viewCollectionPost(app *App, w http.ResponseWriter, r *http.Request) error 
 
 	// Normalize the URL, redirecting user to consistent post URL
 	if slug != strings.ToLower(slug) {
-		loc := fmt.Sprintf("/%s", strings.ToLower(slug))
+		loc := fmt.Sprintf("%s/%s", app.cfg.App.BasePath, strings.ToLower(slug))
 		if !app.cfg.App.SingleUser {
-			loc = "/" + cr.alias + loc
+			loc = app.cfg.App.BasePath + "/" + cr.alias + loc
 		}
 		return impart.HTTPError{http.StatusMovedPermanently, loc}
 	}
@@ -1507,7 +1507,7 @@ func viewCollectionPost(app *App, w http.ResponseWriter, r *http.Request) error 
 				// Redirect if necessary
 				newAlias := app.db.GetCollectionRedirect(cr.alias)
 				if newAlias != "" {
-					return impart.HTTPError{http.StatusFound, "/" + newAlias + "/" + slug}
+					return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + "/" + newAlias + "/" + slug}
 				}
 			}
 		}

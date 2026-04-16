@@ -192,7 +192,7 @@ func showLocalTimeline(app *App, w http.ResponseWriter, r *http.Request, page in
 	if page > 1 {
 		start = app.timeline.postsPerPage * (page - 1)
 		if start > pl {
-			return impart.HTTPError{http.StatusFound, fmt.Sprintf("/read/p/%d", ttlPages)}
+			return impart.HTTPError{http.StatusFound, fmt.Sprintf("%s/read/p/%d", app.cfg.App.BasePath, ttlPages)}
 		}
 	}
 	end := app.timeline.postsPerPage * page
@@ -294,7 +294,7 @@ func viewLocalTimelineFeed(app *App, w http.ResponseWriter, req *http.Request) e
 		return impart.HTTPError{http.StatusNotFound, "Page doesn't exist."}
 	}
 	if !strings.HasSuffix(req.URL.Path, "/") {
-		return impart.HTTPError{http.StatusMovedPermanently, "/read/feed/"}
+		return impart.HTTPError{http.StatusMovedPermanently, app.cfg.App.BasePath + "/read/feed/"}
 	}
 
 	updateTimelineCache(app.timeline, false)

@@ -47,9 +47,9 @@ var postActions = function() {
 			}
 		};
 		if (collAlias == '|anonymous|') {
-			He.postJSON("/api/posts/disperse", params, callback);
+			He.postJSON(basePath + "/api/posts/disperse", params, callback);
 		} else {
-			He.postJSON("/api/collections/"+collAlias+"/collect", params, callback);
+			He.postJSON(basePath + "/api/collections/"+collAlias+"/collect", params, callback);
 		}
 	};
 	var Move = function(el, id, collAlias, singleUser) {
@@ -108,9 +108,9 @@ var postActions = function() {
 			}
 		}
 		if (collAlias == '|anonymous|') {
-			He.postJSON("/api/posts/disperse", params, callback);
+			He.postJSON(basePath + "/api/posts/disperse", params, callback);
 		} else {
-			He.postJSON("/api/collections/"+collAlias+"/collect", params, callback);
+			He.postJSON(basePath + "/api/collections/"+collAlias+"/collect", params, callback);
 		}
 	};
 

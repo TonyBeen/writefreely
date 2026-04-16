@@ -13,7 +13,7 @@
 <script>
   // TODO: this feels more like a mutation observer
   addEventListener('DOMContentLoaded', function () {
-    var hlbaseUri = "/js/";
+    var hlbaseUri = basePath + "/js/";
     var lb = document.querySelectorAll("code[class^='language-']");
 
 
@@ -65,7 +65,7 @@
       // We have blocks to be highlighted, so we load css
       var st = document.createElement('link');
       st.rel = "stylesheet";
-      st.href = "/css/lib/atom-one-light.min.css";
+      st.href = basePath + "/css/lib/atom-one-light.min.css";
       document.head.appendChild(st);
 
       // Construct set of files to load, in order
@@ -103,7 +103,7 @@
       },
     };
 </script>
-<script type="text/javascript" id="MathJax-script" src="/js/mathjax/tex-svg-full.js" async>
+<script type="text/javascript" id="MathJax-script" src="{{bp "/js/mathjax/tex-svg-full.js"}}" async>
 </script>
 {{end}}
 
@@ -111,9 +111,9 @@
     {{if .EmailSubsEnabled}}
 		<div id="emailsub">
             {{if .IsSubscriber}}
-			<p>You're subscribed to email updates. <a href="/api/collections/{{.Alias}}/email/unsubscribe">Unsubscribe</a>.</p>
+			<p>You're subscribed to email updates. <a href="{{bp (printf "/api/collections/%s/email/unsubscribe" .Alias)}}">Unsubscribe</a>.</p>
             {{else}}
-			<form method="post" action="/api/collections/{{.Alias}}/email/subscribe">
+			<form method="post" action="{{bp (printf "/api/collections/%s/email/subscribe" .Alias)}}">
 				<input type="hidden" name="web" value="1" />
 				<p>Enter your email to subscribe to updates.</p> <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="email" name="{{.Honeypot}}" tabindex="-1" value="" /><input type="password" name="fake_password" tabindex="-1" placeholder="password" autocomplete="new-password" /></div>
 				<input type="email" name="email" placeholder="me@example.com" />

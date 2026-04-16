@@ -280,7 +280,7 @@ var deletePost = function(postID, token, callback) {
 	$delBtn.innerHTML = '...';
 
 	var http = new XMLHttpRequest();
-	var url = "/api/posts/" + postID + (typeof token !== 'undefined' ? "?token=" + encodeURIComponent(token) : '');
+	var url = basePath + "/api/posts/" + postID + (typeof token !== 'undefined' ? "?token=" + encodeURIComponent(token) : '');
 	http.open("DELETE", url, true);
 	http.onreadystatechange = function() {
 		if (http.readyState == 4) {

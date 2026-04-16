@@ -253,7 +253,7 @@ func handleViewHome(app *App, w http.ResponseWriter, r *http.Request) error {
 		}
 
 		if land := app.cfg.App.LandingPath(); land != "/" {
-			return impart.HTTPError{http.StatusFound, land}
+			return impart.HTTPError{http.StatusFound, app.cfg.App.BasePath + land}
 		}
 	}
 

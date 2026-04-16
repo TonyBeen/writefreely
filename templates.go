@@ -29,6 +29,7 @@ var (
 	templates = map[string]*template.Template{}
 	pages     = map[string]*template.Template{}
 	userPages = map[string]*template.Template{}
+	basePath  string
 	funcMap   = template.FuncMap{
 		"largeNumFmt": largeNumFmt,
 		"pluralize":   pluralize,
@@ -41,6 +42,7 @@ var (
 		"hasPrefix":   strings.HasPrefix,
 		"hasSuffix":   strings.HasSuffix,
 		"dict":        dict,
+		"bp":          bp,
 	}
 )
 
@@ -116,8 +118,13 @@ func initUserPage(parentDir, path, key string) {
 	))
 }
 
+func bp(path string) string {
+	return basePath + path
+}
+
 // InitTemplates loads all template files from the configured parent dir.
 func InitTemplates(cfg *config.Config) error {
+	basePath = cfg.App.BasePath
 	log.Info("Loading templates...")
 	tmplFiles, err := os.ReadDir(filepath.Join(cfg.Server.TemplatesParentDir, templatesDir))
 	if err != nil {

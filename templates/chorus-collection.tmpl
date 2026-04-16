@@ -5,9 +5,9 @@
 
 		<title>{{.DisplayTitle}}{{if not .SingleUser}} &mdash; {{.SiteName}}{{end}}</title>
 
-		<link rel="stylesheet" type="text/css" href="/css/write.css" />
-		{{if .CustomCSS}}<link rel="stylesheet" type="text/css" href="/local/custom.css" />{{end}}
-		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="stylesheet" type="text/css" href="{{bp "/css/write.css"}}" />
+		{{if .CustomCSS}}<link rel="stylesheet" type="text/css" href="{{bp "/local/custom.css"}}" />{{end}}
+		<link rel="shortcut icon" href="{{bp "/favicon.ico"}}" />
 		<link rel="canonical" href="{{.CanonicalURL}}">
 		{{if gt .CurrentPage 1}}<link rel="prev" href="{{.PrevPageURL .Prefix .NavSuffix .CurrentPage .IsTopLevel}}">{{end}}
 		{{if lt .CurrentPage .TotalPages}}<link rel="next" href="{{.NextPageURL .Prefix .NavSuffix .CurrentPage .IsTopLevel}}">{{end}}
@@ -67,13 +67,13 @@ body#collection header nav.tabs a:first-child {
 			{{template "user-silenced"}}
 		{{end}}
 		<header>
-		<h1 dir="{{.Direction}}" id="blog-title"><a href="/{{if .IsTopLevel}}{{else}}{{.Prefix}}{{.Alias}}/{{end}}" class="h-card p-author u-url" rel="me author">{{.DisplayTitle}}</a></h1>
+		<h1 dir="{{.Direction}}" id="blog-title"><a href="{{if .IsTopLevel}}{{bp "/"}}{{else}}{{bp (printf "/%s%s/" .Prefix .Alias)}}{{end}}" class="h-card p-author u-url" rel="me author">{{.DisplayTitle}}</a></h1>
 		{{if .Description}}<p class="description p-note">{{.Description}}</p>{{end}}
 		{{/*if not .Public/*}}
 			<!--p class="meta-note"><span>Private collection</span>. Only you can see this page.</p-->
 		{{/*end*/}}
 		{{if .PinnedPosts}}<nav class="pinned-posts">
-			{{range .PinnedPosts}}<a class="pinned" href="{{if not $.SingleUser}}/{{$.Alias}}/{{.Slug.String}}{{else}}{{.CanonicalURL $.Host}}{{end}}">{{.PlainDisplayTitle}}</a>{{end}}</nav>
+			{{range .PinnedPosts}}<a class="pinned" href="{{if not $.SingleUser}}{{bp (printf "/%s/%s" $.Alias .Slug.String)}}{{else}}{{.CanonicalURL $.Host}}{{end}}">{{.PlainDisplayTitle}}</a>{{end}}</nav>
 		{{end}}
 		</header>
 
@@ -83,8 +83,8 @@ body#collection header nav.tabs a:first-child {
 			<div id="welcome">
 				<h2>Welcome, <strong>{{.Username}}</strong>!</h2>
 				<p>This is your new blog.</p>
-				<p><a class="simple-cta" href="/#{{.Alias}}">Start writing</a>, or <a class="simple-cta" href="/me/c/{{.Alias}}">customize</a> your blog.</p>
-				<p>Check out our <a class="simple-cta" href="https://writefreely.org/docs/latest/writer/writing">writing guide</a> to see what else you can do, and <a class="simple-cta" href="/contact">get in touch</a> anytime with questions or feedback.</p>
+				<p><a class="simple-cta" href="{{bp (printf "/#%s" .Alias)}}">Start writing</a>, or <a class="simple-cta" href="{{bp (printf "/me/c/%s" .Alias)}}">customize</a> your blog.</p>
+				<p>Check out our <a class="simple-cta" href="https://writefreely.org/docs/latest/writer/writing">writing guide</a> to see what else you can do, and <a class="simple-cta" href="{{bp "/contact"}}">get in touch</a> anytime with questions or feedback.</p>
 			</div>
 			{{end}}
 
@@ -106,7 +106,7 @@ body#collection header nav.tabs a:first-child {
 		<footer>
 			<hr />
 			<nav dir="ltr">
-				{{if not .SingleUser}}<a class="home pubd" href="/">{{.SiteName}}</a> &middot; {{end}}powered by <a style="margin-left:0" href="https://writefreely.org">writefreely</a>
+				{{if not .SingleUser}}<a class="home pubd" href="{{bp "/"}}">{{.SiteName}}</a> &middot; {{end}}powered by <a style="margin-left:0" href="https://writefreely.org">writefreely</a>
 			</nav>
 		</footer>
 		{{ end }}
@@ -116,9 +116,9 @@ body#collection header nav.tabs a:first-child {
 		{{range .ExternalScripts}}<script type="text/javascript" src="{{.}}" async></script>{{end}}
 		{{if .Script}}<script type="text/javascript">{{.ScriptDisplay}}</script>{{end}}
 	{{end}}
-	<script src="/js/h.js"></script>
-	<script src="/js/localdate.js"></script>
-	<script src="/js/postactions.js"></script>
+	<script src="{{bp "/js/h.js"}}"></script>
+	<script src="{{bp "/js/localdate.js"}}"></script>
+	<script src="{{bp "/js/postactions.js"}}"></script>
 	<script type="text/javascript">
 var deleting = false;
 function delPost(e, id, owned) {
@@ -146,7 +146,7 @@ var deletePost = function(postID, token, callback) {
 	$delBtn.innerHTML = '...';
 
 	var http = new XMLHttpRequest();
-	var url = "/api/posts/" + postID;
+	var url = basePath + "/api/posts/" + postID;
 	http.open("DELETE", url, true);
 	http.onreadystatechange = function() {
 		if (http.readyState == 4) {
@@ -183,7 +183,7 @@ function pinPost(e, postID, slug, title) {
 		var $header = document.querySelector('header:not(.multiuser)');
 		var $pinnedNavs = $header.getElementsByTagName('nav');
 		// Add link to nav
-		var link = '<a class="pinned" href="/{{.Alias}}/'+slug+'">'+title+'</a>';
+		var link = '<a class="pinned" href="' + basePath + '/{{.Alias}}/'+slug+'">'+title+'</a>';
 		if ($pinnedNavs.length == 0) {
 			$header.insertAdjacentHTML("beforeend", '<nav>'+link+'</nav>');
 		} else {
@@ -195,7 +195,7 @@ function pinPost(e, postID, slug, title) {
 	$pinBtn.innerHTML = '...';
 
 	var http = new XMLHttpRequest();
-	var url = "/api/collections/{{.Alias}}/pin";
+	var url = basePath + "/api/collections/{{.Alias}}/pin";
 	var params = [ { "id": postID } ];
 	http.open("POST", url, true);
 	http.setRequestHeader("Content-type", "application/json");
@@ -221,11 +221,11 @@ function pinPost(e, postID, slug, title) {
 
 	try {
 	  WebFontConfig = {
-		custom: { families: [ 'Lora:400,700:latin', 'Open+Sans:400,700:latin' ], urls: [ '/css/fonts.css' ] }
+		custom: { families: [ 'Lora:400,700:latin', 'Open+Sans:400,700:latin' ], urls: [ basePath + '/css/fonts.css' ] }
 	  };
 	  (function() {
 		var wf = document.createElement('script');
-		wf.src = '/js/webfont.js';
+		wf.src = basePath + '/js/webfont.js';
 		wf.type = 'text/javascript';
 		wf.async = 'true';
 		var s = document.getElementsByTagName('script')[0];

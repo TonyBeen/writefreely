@@ -9,9 +9,9 @@
 			<a href="{{if not $.SingleUser}}/{{$.Alias}}/{{.Slug.String}}{{else}}{{$.CanonicalURL}}{{.Slug.String}}{{end}}" itemprop="url" class="u-url">{{.HTMLTitle}}</a>
 		{{- end}}
 		{{if $.IsOwner}}
-			<a class="user hidden action" href="/{{if not $.SingleUser}}{{$.Alias}}/{{end}}{{.Slug.String}}/edit">edit</a>
-			{{if $.CanPin}}<a class="user hidden pin action" href="/{{$.Alias}}/{{.Slug.String}}/pin" onclick="pinPost(event, '{{.ID}}', '{{.Slug.String}}', '{{.PlainDisplayTitle}}')">pin</a>{{end}}
-			<a class="user hidden delete action" onclick="delPost(event, '{{.ID}}')" href="/{{$.Alias}}/{{.Slug.String}}/delete">delete</a>
+			<a class="user hidden action" href="{{if not $.SingleUser}}{{bp (printf "/%s/%s/edit" $.Alias .Slug.String)}}{{else}}{{bp (printf "/%s/edit" .Slug.String)}}{{end}}">edit</a>
+			{{if $.CanPin}}<a class="user hidden pin action" href="{{bp (printf "/%s/%s/pin" $.Alias .Slug.String)}}" onclick="pinPost(event, '{{.ID}}', '{{.Slug.String}}', '{{.PlainDisplayTitle}}')">pin</a>{{end}}
+			<a class="user hidden delete action" onclick="delPost(event, '{{.ID}}')" href="{{bp (printf "/%s/%s/delete" $.Alias .Slug.String)}}">delete</a>
 			{{if gt (len $.Collections) 1}}<div class="user hidden action flat-select">
 				<select id="move-{{.ID}}" onchange="postActions.multiMove(this, '{{.ID}}', {{if $.SingleUser}}true{{else}}false{{end}})" title="Move this post to another blog">
 					<option style="display:none"></option>
@@ -19,10 +19,10 @@
 					{{range $.Collections}}{{if ne .Alias $.Alias}}<option value="{{.Alias}}">{{.DisplayTitle}}</option>{{end}}{{end}}
 				</select>
 				<label for="move-{{.ID}}">move to...</label>
-				<img class="ic-18dp" src="/img/ic_down_arrow_dark@2x.png" />
+				<img class="ic-18dp" src="{{bp "/img/ic_down_arrow_dark@2x.png"}}" />
 			</div>{{else}}
 			{{range $.Collections}}
-			<a class="user hidden action" href="/{{$el.ID}}" title="Change to a draft" onclick="postActions.move(this, '{{$el.ID}}', '|anonymous|', {{if $.SingleUser}}true{{else}}false{{end}});return false">change to <em>draft</em></a>
+			<a class="user hidden action" href="{{bp "/"}}{{$el.ID}}" title="Change to a draft" onclick="postActions.move(this, '{{$el.ID}}', '|anonymous|', {{if $.SingleUser}}true{{else}}false{{end}});return false">change to <em>draft</em></a>
 			{{end}}
 			{{end}}
 		{{end}}
@@ -36,9 +36,9 @@
 	{{- end}}
 	{{if $.IsOwner}}
 		{{if not $.Format.ShowDates}}<a class="user hidden action" href="{{if not $.SingleUser}}/{{$.Alias}}/{{.Slug.String}}{{else}}{{$.CanonicalURL}}{{.Slug.String}}{{end}}">view</a>{{end}}
-		<a class="user hidden action" href="/{{if not $.SingleUser}}{{$.Alias}}/{{end}}{{.Slug.String}}/edit">edit</a>
-		{{if $.CanPin}}<a class="user hidden pin action" href="/{{if not $.SingleUser}}{{$.Alias}}/{{end}}{{.Slug.String}}/pin" onclick="pinPost(event, '{{.ID}}', '{{.Slug.String}}', '{{.PlainDisplayTitle}}')">pin</a>{{end}}
-		<a class="user hidden delete action" onclick="delPost(event, '{{.ID}}')" href="/{{$.Alias}}/{{.Slug.String}}/delete">delete</a>
+		<a class="user hidden action" href="{{if not $.SingleUser}}{{bp (printf "/%s/%s/edit" $.Alias .Slug.String)}}{{else}}{{bp (printf "/%s/edit" .Slug.String)}}{{end}}">edit</a>
+		{{if $.CanPin}}<a class="user hidden pin action" href="{{if not $.SingleUser}}{{bp (printf "/%s/%s/pin" $.Alias .Slug.String)}}{{else}}{{bp (printf "/%s/pin" .Slug.String)}}{{end}}" onclick="pinPost(event, '{{.ID}}', '{{.Slug.String}}', '{{.PlainDisplayTitle}}')">pin</a>{{end}}
+		<a class="user hidden delete action" onclick="delPost(event, '{{.ID}}')" href="{{if not $.SingleUser}}{{bp (printf "/%s/%s/delete" $.Alias .Slug.String)}}{{else}}{{bp (printf "/%s/delete" .Slug.String)}}{{end}}">delete</a>
 		{{if gt (len $.Collections) 1}}<div class="user hidden action flat-select">
 			<select id="move-{{.ID}}" onchange="postActions.multiMove(this, '{{.ID}}', {{if $.SingleUser}}true{{else}}false{{end}})" title="Move this post to another blog">
 				<option style="display:none"></option>
@@ -46,10 +46,10 @@
 				{{range $.Collections}}{{if ne .Alias $.Alias}}<option value="{{.Alias}}">{{.DisplayTitle}}</option>{{end}}{{end}}
 			</select>
 			<label for="move-{{.ID}}">move to...</label>
-			<img class="ic-18dp" src="/img/ic_down_arrow_dark@2x.png" />
+			<img class="ic-18dp" src="{{bp "/img/ic_down_arrow_dark@2x.png"}}" />
 		</div>{{else}}
 		{{range $.Collections}}
-		<a class="user hidden action" href="/{{$el.ID}}" title="Change to a draft" onclick="postActions.move(this, '{{$el.ID}}', '|anonymous|', {{if $.SingleUser}}true{{else}}false{{end}});return false">change to <em>draft</em></a>
+		<a class="user hidden action" href="{{bp "/"}}{{$el.ID}}" title="Change to a draft" onclick="postActions.move(this, '{{$el.ID}}', '|anonymous|', {{if $.SingleUser}}true{{else}}false{{end}});return false">change to <em>draft</em></a>
 		{{end}}
 		{{end}}
 	{{end}}
@@ -61,7 +61,7 @@
 <a class="read-more" href="{{$.CanonicalURL}}{{.Slug.String}}">{{localstr "Read more..." .Language.String}}</a>{{else}}<div {{if .Language}}lang="{{.Language.String}}"{{end}} dir="{{.Direction}}" class="book e-content">{{if and (and (not $.IsOwner) (not $.Format.ShowDates)) (not .Title.String)}}<a class="hidden action" href="{{if $.IsOwner}}/{{$.Alias}}/{{.Slug.String}}{{else}}{{$.CanonicalURL}}{{.Slug.String}}{{end}}">view</a>{{end}}{{.HTMLContent}}</div>{{end}}</article>{{ end }}
 {{ end }}
 
-{{define "paid-badge"}}<img class="paid" alt="Paid article" src="/img/paidarticle.svg" /> {{end}}
+{{define "paid-badge"}}<img class="paid" alt="Paid article" src="{{bp "/img/paidarticle.svg"}}" /> {{end}}
 
 {{define "paging"}}
     {{if gt .TotalPages 1}}<nav id="paging" class="content-container clearfix">

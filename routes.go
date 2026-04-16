@@ -31,7 +31,12 @@ func (app *App) InitStaticRoutes(r *mux.Router) {
 	fs = cacheControl(fs)
 	app.shttp = http.NewServeMux()
 	app.shttp.Handle("/", fs)
-	r.PathPrefix("/").Handler(fs)
+	if app.cfg.App.BasePath == "" {
+		r.PathPrefix("/").Handler(fs)
+	} else {
+		r.PathPrefix(app.cfg.App.BasePath).Handler(
+			http.StripPrefix(app.cfg.App.BasePath, fs))
+	}
 }
 
 // InitRoutes adds dynamic routes for the given mux.Router.
@@ -40,7 +45,8 @@ func InitRoutes(apper Apper, r *mux.Router) *mux.Router {
 	handler := NewWFHandler(apper)
 
 	// Set up routes
-	hostSubroute := apper.App().cfg.App.Host[strings.Index(apper.App().cfg.App.Host, "://")+3:]
+	hostURL, _ := url.Parse(apper.App().cfg.App.Host)
+	hostSubroute := hostURL.Host
 	if apper.App().cfg.App.SingleUser {
 		hostSubroute = "{domain}"
 	} else {
@@ -56,7 +62,7 @@ func InitRoutes(apper Apper, r *mux.Router) *mux.Router {
 	}
 
 	// Primary app routes
-	write := r.PathPrefix("/").Subrouter()
+	write := r.PathPrefix(apper.App().cfg.App.BasePath).Subrouter()
 
 	// Federation endpoint configurations
 	wf := webfinger.Default(wfResolver{apper.App().db, apper.App().cfg})

@@ -47,12 +47,12 @@ func handleWebSignup(app *App, w http.ResponseWriter, r *http.Request) error {
 	ur.Web = true
 	ur.Normalize = true
 
-	to := "/"
+	to := app.cfg.App.BasePath + "/"
 	if app.cfg.App.SimpleNav {
-		to = "/new"
+		to = app.cfg.App.BasePath + "/new"
 	}
 	if ur.InviteCode != "" {
-		to = "/invite/" + ur.InviteCode
+		to = app.cfg.App.BasePath + "/invite/" + ur.InviteCode
 	}
 	_, err := signupWithRegistration(app, ur, w, r)
 	if err != nil {
